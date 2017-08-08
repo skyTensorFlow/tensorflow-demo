@@ -55,5 +55,6 @@ with tf.Session() as sess:
             lines=ax.plot(x_data,predition_value,'r-',lw=5)
             plt.pause(0.1)
 
+#为了让程序保持运行，增加以下代码
 while(True):
     a=1
