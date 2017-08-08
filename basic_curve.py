@@ -5,32 +5,34 @@
 import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
-def add_layer(inputs,in_size,out_size,activatuib_funaction=None):
-    Weights=tf.Variable(tf.random_normal([in_size,out_size]))
-    biases=tf.Variable(tf.zeros([1,out_size]))+0.1
-    Wx_plus_b=tf.matmul(inputs,Weights)+biases
+def add_layer(layoutname,inputs,in_size,out_size,activatuib_funaction=None):
+    with tf.name_scope(layoutname):
+        Weights=tf.Variable(tf.random_normal([in_size,out_size]))
+        biases=tf.Variable(tf.zeros([1,out_size]))+0.1
+        Wx_plus_b=tf.matmul(inputs,Weights)+biases
 
-    if activatuib_funaction is None:
-        outputs=Wx_plus_b
-    else :
-        outputs=activatuib_funaction(Wx_plus_b)
-    return outputs
-
+        if activatuib_funaction is None:
+            outputs=Wx_plus_b
+        else :
+            outputs=activatuib_funaction(Wx_plus_b)
+        return outputs
 
 x_data=np.linspace(-1,1,300)[:,np.newaxis]
 noise=np.random.normal(0,0.05,x_data.shape)
 y_data=np.square(x_data)-0.5+noise
 
-xs=tf.placeholder(tf.float32,[None,1])
-ys=tf.placeholder(tf.float32,[None,1])
+with tf.name_scope('inputs'):
+    xs=tf.placeholder(tf.float32,[None,1])
+    ys=tf.placeholder(tf.float32,[None,1])
 
 
-l1=add_layer(xs,1,10,activatuib_funaction=tf.nn.relu)
-predition=add_layer(l1,10,1,activatuib_funaction=None)
+l1=add_layer("first_layer",xs,1,10,activatuib_funaction=tf.nn.relu)
+predition=add_layer('second_layout',l1,10,1,activatuib_funaction=None)
 
-loss=tf.reduce_mean(tf.reduce_sum(tf.square(ys-predition),reduction_indices=[1]))
-
-train_step=tf.train.GradientDescentOptimizer(0.1).minimize(loss)
+with tf.name_scope('loss'):
+    loss=tf.reduce_mean(tf.reduce_sum(tf.square(ys-predition),reduction_indices=[1]))
+with tf.name_scope('train'):
+    train_step=tf.train.GradientDescentOptimizer(0.1).minimize(loss)
 
 init=tf.global_variables_initializer()
 
@@ -40,8 +42,10 @@ with tf.Session() as sess:
     ax.scatter(x_data,y_data)
     plt.show(block=False)
 
+    writer=tf.summary.FileWriter("logs/",sess.graph)
     sess.run(init)
-    for train in range(50000):
+
+    for train in range(5000):
 
         sess.run(train_step,feed_dict={xs:x_data,ys:y_data})
         if train%50==0:
